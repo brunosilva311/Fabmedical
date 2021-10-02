@@ -38,7 +38,7 @@ spec:
               protocol: TCP
           resources:
             requests:
-              cpu: 1
+              cpu: 100m
               memory: 128Mi
           securityContext:
             privileged: false
