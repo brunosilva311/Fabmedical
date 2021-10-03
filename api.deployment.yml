@@ -34,7 +34,6 @@ spec:
             failureThreshold: 3
           ports:
             - containerPort: 3001
-              hostPort: 3001
               protocol: TCP
           resources:
             requests:
