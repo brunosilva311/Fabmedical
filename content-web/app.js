@@ -10,7 +10,7 @@ appInsights.setup("6ca8c724-e656-4feb-83f5-cfebfaf60017");
 appInsights.start();
 
 app.use(express.static(path.join(__dirname, 'dist/content-web')));
-const contentApiUrl = process.env.CONTENT_API_URL || "http://20.96.7.180:3001";
+const contentApiUrl = process.env.CONTENT_API_URL || "http://20.96.7.181:3001";
 
 
 function getSessions(cb) {
