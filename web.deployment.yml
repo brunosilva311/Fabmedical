@@ -5,7 +5,7 @@ metadata:
     app: web
   name: web
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: web
@@ -36,11 +36,12 @@ spec:
           imagePullPolicy: Always
           name: web
           ports:
-            - containerPort: 3000          
+            - containerPort: 3000
+              hostPort: 80
               protocol: TCP
           resources:
             requests:
-              cpu: 125m
+              cpu: 1000m
               memory: 128Mi
           securityContext:
             privileged: false

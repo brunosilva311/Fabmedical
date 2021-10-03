@@ -5,7 +5,7 @@ metadata:
     app: api
   name: api
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: api
@@ -34,10 +34,11 @@ spec:
             failureThreshold: 3
           ports:
             - containerPort: 3001
+              hostPort: 3001
               protocol: TCP
           resources:
             requests:
-              cpu: 100m
+              cpu: 1
               memory: 128Mi
           securityContext:
             privileged: false
