@@ -23,6 +23,12 @@ spec:
       containers:
         - name: api
           image: fabmedicalbbs.azurecr.io/content-api
+          env:
+          - name: MONGODB_CONNECTION
+            valueFrom:
+              secretKeyRef:
+                name: cosmosdb
+                key: db
           imagePullPolicy: Always
           livenessProbe:
             httpGet:
