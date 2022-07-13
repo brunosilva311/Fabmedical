@@ -1,0 +1,63 @@
+on: [push]
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    
+    - uses: actions/checkout@master
+    
+    - uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Create ACR
+      id: create-acr
+      run: |
+        az acr create -n acr1af9d -g acr1af9db8ce-rg --location "East US" --sku Standard --admin-enabled
+        echo "::set-output name=acr_username::`az acr credential show -n acr1af9d --query username | xargs`"
+        echo "::set-output name=acr_password::`az acr credential show -n acr1af9d --query passwords[0].value | xargs`"
+        echo "::add-mask::`az acr credential show -n acr1af9d --query passwords[0].value | xargs`"
+
+    - uses: azure/docker-login@v1
+      with:
+        login-server: acr1af9d.azurecr.io
+        username: ${{ steps.create-acr.outputs.acr_username }}
+        password: ${{ steps.create-acr.outputs.acr_password }}
+
+    - name: Build and push image to ACR
+      id: build-image
+      run: |
+        docker build "$GITHUB_WORKSPACE/content-api" -f  "content-api/Dockerfile" -t acr1af9d.azurecr.io/aks1:${{ github.sha }} --label dockerfile-path=content-api/Dockerfile
+        docker push acr1af9d.azurecr.io/aks1:${{ github.sha }}
+    
+    - uses: azure/k8s-set-context@v1
+      id: login
+      with:
+         kubeconfig: ${{ secrets.aks_aks1_kubeConfig }}
+    
+    - name: Create namespace
+      run: |
+        namespacePresent=`kubectl get namespace | grep aks-1af9d | wc -l`
+        if [ $namespacePresent -eq 0 ]
+        then
+            echo `kubectl create namespace aks-1af9d`
+        fi
+
+    - uses: azure/k8s-create-secret@v1
+      with:
+        namespace: aks-1af9d
+        container-registry-url: acr1af9d.azurecr.io
+        container-registry-username: ${{ steps.create-acr.outputs.acr_username }}
+        container-registry-password: ${{ steps.create-acr.outputs.acr_password }}
+        secret-name: aks1dockerauth
+       
+    - uses: azure/k8s-deploy@v1.2
+      with:
+        namespace: aks-1af9d
+        manifests: |
+          manifests/deployment.yml
+          manifests/service.yml
+        images: |
+          acr1af9d.azurecr.io/aks1:${{ github.sha }}
+        imagepullsecrets: |
+          aks1dockerauth   
